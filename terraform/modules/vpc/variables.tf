@@ -1,9 +1,9 @@
-variable "project_name" {
+variable "project_Name" {
     description = "Name of the project"
     type = string
 }
 
-variable "enviornment" {
+variable "Environment" {
     description = "enviormnment (dev, staging, prod)"
     type = string
 }
