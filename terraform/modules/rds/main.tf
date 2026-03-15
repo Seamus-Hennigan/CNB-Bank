@@ -1,21 +1,21 @@
 #RDS subnet group (Banking)
 resource "aws_db_subnet_group" "banking" {
-    Name = "${var.project_Name}-banking-subnet-group "
+    name = "${var.project_name}-banking-subnet-group "
     subnet_ids = var.private_subnet_ids
 
     tags = {
-        Name = "${var.project_Name}-banking-subnet-groups"
+        Name = "${var.project_name}-banking-subnet-groups"
         Environment = var.Environment
     }
 }
 
 #RDS Subnet Group (Trading)
 resource "aws_db_subnet_group" "trading" {
-    Name = "${var.project_Name}-trading-subnet-group"
+    name = "${var.project_name}-trading-subnet-group"
     subnet_ids = var.private_subnet_ids
 
     tags = {
-        Name = "${var.project_Name}-trading-subnet-groups"
+        Name = "${var.project_name}-trading-subnet-groups"
         Environment = var.Environment
     }
   
@@ -23,18 +23,18 @@ resource "aws_db_subnet_group" "trading" {
 
 #RDS Instance (Banking)
 resource "aws_db_instance" "banking" {
-    identifier =  "${var.project_Name}-banking-db"
+    identifier =  "${var.project_name}-banking-db"
     engine = "mysql"
     engine_version = "8.0.27"
     instance_class = var.db_instance_class
     allocated_storage = var.allocated_storage
 
 
-    db_Name = "cnb_banking"
-    userName = var.banking_db_userName
+    db_name = "cnb_banking"
+    username = var.banking_db_username
     password = var.banking_db_password
 
-    db_subnet_group_Name = aws_db_subnet_group.banking.Name
+    db_subnet_group_name = aws_db_subnet_group.banking.name
     vpc_security_group_ids = [var.rds_banking_sg_id]
 
     backup_retention_period = 7
@@ -46,24 +46,24 @@ resource "aws_db_instance" "banking" {
     deletion_protection = false
 
     tags = {
-        Name = "${var.project_Name}-banking-db"
+        Name = "${var.project_name}-banking-db"
         Environment = var.Environment
     }
 }
  
 # RDS Instance (Trading)
 resource "aws_db_instance" "trading" {
-  identifier = "${var.project_Name}-trading-db"
+  identifier = "${var.project_name}-trading-db"
   engine = "mysql"
   engine_version = "8.0"
   instance_class = var.db_instance_class
   allocated_storage = var.allocated_storage
 
-  db_Name  = "cnb_trading"
-  userName = var.trading_db_userName
+  db_name  = "cnb_trading"
+  username = var.trading_db_username
   password = var.trading_db_password
 
-  db_subnet_group_Name = aws_db_subnet_group.trading.Name
+  db_subnet_group_name = aws_db_subnet_group.trading.name
   vpc_security_group_ids = [var.rds_trading_sg_id]
 
   backup_retention_period = 7
@@ -75,7 +75,7 @@ resource "aws_db_instance" "trading" {
   deletion_protection = false
 
   tags = {
-    Name = "${var.project_Name}-trading-db"
+    Name = "${var.project_name}-trading-db"
     Environment = var.Environment
   }
 }

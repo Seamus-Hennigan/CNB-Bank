@@ -1,10 +1,10 @@
 resource "aws_vpc" "main" {
     cidr_block = var.vpc_cidr
-    enable_dns_hostNames = true
+    enable_dns_hostnames = true
     enable_dns_support = true
 
     tags = {
-      Name = "${var.project_Name}-vpc"
+      Name = "${var.project_name}-vpc"
       Environment = var.Environment
     }
   
@@ -15,7 +15,7 @@ resource "aws_internet_gateway" "main" {
     vpc_id = aws_vpc.main.id
 
     tags = {
-        Name = "${var.project_Name}-igw"
+        Name = "${var.project_name}-igw"
         Environment = var.Environment
     }
 }
@@ -30,7 +30,7 @@ resource "aws_subnet" "public" {
     map_public_ip_on_launch = true
     
     tags = {
-        Name = "${var.project_Name}-public-subnet-${count.index + 1}"
+        Name = "${var.project_name}-public-subnet-${count.index + 1}"
         Environment = var.Environment
     }
 }
@@ -42,7 +42,7 @@ resource "aws_subnet" "private" {
     availability_zone = var.availability_zones[count.index]
 
     tags = {
-        Name = "${var.project_Name}-private-subnet-${count.index + 1}"
+        Name = "${var.project_name}-private-subnet-${count.index + 1}"
         Environment = var.Environment
     }
 }
@@ -51,7 +51,7 @@ resource "aws_eip" "nat" {
     domain = "vpc"
 
     tags = {
-      Name = "${var.project_Name}-nat-eip"
+      Name = "${var.project_name}-nat-eip"
       Environment = var.Environment
     }
 }
@@ -61,7 +61,7 @@ resource "aws_nat_gateway" "main" {
     subnet_id = aws_subnet.public[0].id
 
     tags = {
-        Name = "${var.project_Name}-nat-gateway"
+        Name = "${var.project_name}-nat-gateway"
         Environment = var.Environment
     }
 
@@ -76,7 +76,7 @@ resource "aws_route_table" "public" {
     }
 
     tags = {
-        Name = "${var.project_Name}-public-rt"
+        Name = "${var.project_name}-public-rt"
         Environment = var.Environment
     }
   
@@ -91,7 +91,7 @@ resource "aws_route_table" "private" {
     }
 
     tags = {
-        Name = "${var.project_Name}-private-rt"
+        Name = "${var.project_name}-private-rt"
         Environment = var.Environment
     }
   

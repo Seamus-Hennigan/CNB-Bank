@@ -1,4 +1,4 @@
-variable "project_Name" {
+variable "project_name" {
     description = "Name of the project"
     type = string
 }
@@ -35,7 +35,7 @@ variable "allocated_storage" {
     default = 20
 }
 
-variable "banking_db_userName" {
+variable "banking_db_username" {
     description = "Master userName for banking database"
     type = string
     sensitive = true
@@ -47,7 +47,7 @@ variable "banking_db_password" {
     sensitive = true
 }
 
-variable "trading_db_userName" {
+variable "trading_db_username" {
     description = "Master userName for trading database"
     type = string
     sensitive = true

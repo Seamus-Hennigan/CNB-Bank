@@ -1,7 +1,7 @@
 #ALB Security Group
 
 resource "aws_security_group" "alb" {
-  Name = "${var.project_Name}-alb-sg"
+  name = "${var.project_name}-alb-sg"
   description = "Security group for Application Load Balancer"
   vpc_id = var.vpc_id
 
@@ -30,13 +30,13 @@ resource "aws_security_group" "alb" {
     }
 
     tags = {
-        Name = "${var.project_Name}-alb-sg"
+        Name = "${var.project_name}-alb-sg"
         Environment = var.Environment
     }
 }
 #Banking Service Security Group
 resource "aws_security_group" "banking" {
-    Name = "${var.project_Name}-banking-sg"
+    name = "${var.project_name}-banking-sg"
     description = "Security group for Banking ECS service"
     vpc_id = var.vpc_id
 
@@ -57,13 +57,13 @@ resource "aws_security_group" "banking" {
     }
 
     tags = {
-        Name = "${var.project_Name}-banking-sg"
+        Name = "${var.project_name}-banking-sg"
         Environment = var.Environment
     }
 }
 
 resource "aws_security_group" "trading" {
-    Name = "${var.project_Name}-trading-sg"
+    name = "${var.project_name}-trading-sg"
     description = "Security group for Trading ECS service"
     vpc_id = var.vpc_id
 
@@ -83,14 +83,14 @@ resource "aws_security_group" "trading" {
     }
 
         tags = {
-        Name = "${var.project_Name}-trading-sg"
+        Name = "${var.project_name}-trading-sg"
         Environment = var.Environment
     }
 }
 
 #RDS Banking Security Group
 resource  "aws_security_group" "rds_banking" {
-    Name = "${var.project_Name}-rds-banking-sg"
+    name = "${var.project_name}-rds-banking-sg"
     description = "Security group for RDS Banking instance"
     vpc_id = var.vpc_id
 
@@ -110,14 +110,14 @@ resource  "aws_security_group" "rds_banking" {
     }
 
     tags = {
-        Name = "${var.project_Name}-rds-banking-sg"
+        Name = "${var.project_name}-rds-banking-sg"
         Environment = var.Environment
     }
 }
 
 #RDS Trading Security Group
 resource  "aws_security_group" "rds_trading" {
-    Name = "${var.project_Name}-rds-trading-sg"
+    name = "${var.project_name}-rds-trading-sg"
     description = "Security group for RDS Trading instance"
     vpc_id = var.vpc_id
 
@@ -137,7 +137,7 @@ resource  "aws_security_group" "rds_trading" {
     }
 
     tags = {
-        Name = "${var.project_Name}-rds-trading-sg"
+        Name = "${var.project_name}-rds-trading-sg"
         Environment = var.Environment
     }
 }
