@@ -10,7 +10,7 @@ resource "aws_lb" "main" {
 
     tags = {
       Name = "${var.project_name}-alb"
-      Environment = var.Environment  
+      Environment = var.environment  
     }
 }
 
@@ -35,7 +35,7 @@ resource "aws_lb_target_group" "banking" {
 
     tags = {
         Name = "${var.project_name}-banking-tg"
-        Environment = var.Environment  
+        Environment = var.environment  
     }
 }
 
@@ -59,7 +59,7 @@ resource "aws_lb_target_group" "trading" {
     
     tags = {
         Name = "${var.project_name}-trading-tg"
-        Environment = var.Environment  
+        Environment = var.environment  
     }
 }
 
@@ -83,7 +83,7 @@ resource "aws_lb_listener" "http" {
 
 #Routing rule for banking
 resource "aws_lb_listener_rule" "banking" {
-    listener_arn = aws_lb_listener.http.arn
+    listener_arn = aws_lb_listener.https.arn
     priority = 100
 
     action {
@@ -98,9 +98,26 @@ resource "aws_lb_listener_rule" "banking" {
     }
 }
 
+# HTTPS Listener
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.main.arn
+  port = 443
+  protocol = "HTTPS"
+  ssl_policy = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn = var.certificate_arn
+
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.banking.arn
+  }
+}
+
+
+
+
 #Routing rule for trading
 resource "aws_lb_listener_rule" "trading" {
-    listener_arn = aws_lb_listener.http.arn
+    listener_arn = aws_lb_listener.https.arn
     priority = 200
 
     action {

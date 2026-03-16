@@ -207,14 +207,15 @@ resource "aws_ecs_task_definition" "trading" {
 #Banking ECS Service
 resource "aws_ecs_service" "banking" {
     name = "${var.project_name}-banking-service"
-    cluster = aws_ecs_cluster.main.id
+    cluster = aws_ecs_cluster.cluster.id
     task_definition = aws_ecs_task_definition.banking.arn
+    desired_count = var.banking_desired_count
     launch_type = "FARGATE"
 
     network_configuration {
       subnets = var.private_subnet_ids
       security_groups = [var.banking_sg_id]
-      assign_public_ip = 8080
+      assign_public_ip = false
     }
 
     load_balancer {
@@ -235,7 +236,7 @@ resource "aws_ecs_service" "banking" {
 #Trading ECS Service
 resource "aws_ecs_service" "trading" {
   name = "${var.project_name}-trading-service"
-  cluster = aws_ecs_cluster.main.id
+  cluster = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.trading.arn
   desired_count = var.trading_desired_count
   launch_type = "FARGATE"
@@ -264,7 +265,7 @@ resource "aws_ecs_service" "trading" {
 resource "aws_appautoscaling_target" "banking" {
   max_capacity = var.banking_max_count
   min_capacity = var.banking_desired_count
-  resource_id = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.banking.name}"
+  resource_id = "service/${aws_ecs_cluster.cluster.name}/${aws_ecs_service.banking.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 }
@@ -287,7 +288,7 @@ resource "aws_appautoscaling_policy" "banking_cpu" {
 resource "aws_appautoscaling_target" "trading" {
   max_capacity = var.trading_max_count
   min_capacity = var.trading_desired_count
-  resource_id = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.trading.name}"
+  resource_id = "service/${aws_ecs_cluster.cluster.name}/${aws_ecs_service.trading.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace = "ecs"
 }

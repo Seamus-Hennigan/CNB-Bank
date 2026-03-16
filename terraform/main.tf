@@ -2,7 +2,7 @@ module "vpc" {
     source = "./modules/vpc"
 
     project_name = var.project_name
-    Environment = var.Environment
+    Environment = var.environment
     vpc_cidr = "10.0.0.0/16"
     public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
     private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
@@ -13,7 +13,7 @@ module "security" {
     source = "./modules/security"
 
     project_name = var.project_name
-    Environment = var.Environment
+    Environment = var.environment
     vpc_id = module.vpc.vpc_id
 }
 
@@ -21,7 +21,7 @@ module "rds" {
   source = "./modules/rds"
 
   project_name = var.project_name
-  Environment = var.Environment
+  Environment = var.environment
   private_subnet_ids = module.vpc.private_subnet_ids
   rds_banking_sg_id = module.security.rds_banking_sg_id
   rds_trading_sg_id = module.security.rds_trading_sg_id
@@ -36,7 +36,7 @@ module "alb" {
     source = "./modules/alb"
 
     project_name = var.project_name
-    Environment = var.Environment
+    environment = var.environment
     vpc_id = module.vpc.vpc_id
     public_subnet_ids = module.vpc.public_subnet_ids
     alb_sg_id = module.security.alb_sg_id
@@ -47,11 +47,18 @@ module "ecs" {
   source = "./modules/ecs"
 
   project_name = var.project_name
-  environment = var.Environment
+  environment = var.environment
   aws_region = var.aws_region
   private_subnet_ids = module.vpc.private_subnet_ids
   banking_sg_id = module.security.banking_sg_id
   trading_sg_id = module.security.trading_sg_id
   banking_target_group_arn = module.alb.banking_target_group_arn
   trading_target_group_arn = module.alb.trading_target_group_arn
+}
+
+module "s3" {
+  source = "./modules/s3"
+
+  project_name = var.project_name
+  environment = var.environment
 }
