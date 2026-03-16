@@ -71,3 +71,23 @@ module "cognito" {
   callback_urls = ["http://localhost:3000/callback"]
   logout_urls = ["http://localhost:3000/logout"]
 }
+
+module "secrets" {
+  source = "./modules/secrets"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  banking_db_endpoint = module.rds.banking_db_endpoint
+  banking_db_name     = module.rds.banking_db_name
+  banking_db_username = var.banking_db_username
+  banking_db_password = var.banking_db_password
+
+  trading_db_endpoint = module.rds.trading_db_endpoint
+  trading_db_name     = module.rds.trading_db_name
+  trading_db_username = var.trading_db_username
+  trading_db_password = var.trading_db_password
+
+  stock_api_key = var.stock_api_key
+
+}

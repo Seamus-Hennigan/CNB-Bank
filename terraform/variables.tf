@@ -45,3 +45,9 @@ variable "certificate_arn" {
   type = string
   
 }
+
+variable "stock_api_key" {
+  description = "Stock market API key"
+  type = string
+  sensitive = true
+}
