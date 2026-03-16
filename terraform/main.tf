@@ -62,3 +62,12 @@ module "s3" {
   project_name = var.project_name
   environment = var.environment
 }
+
+module "cognito" {
+  source = "./modules/cognito"
+
+  project_name = var.project_name
+  environment = var.environment
+  callback_urls = ["http://localhost:3000/callback"]
+  logout_urls = ["http://localhost:3000/logout"]
+}
