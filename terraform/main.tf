@@ -91,3 +91,30 @@ module "secrets" {
   stock_api_key = var.stock_api_key
 
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  project_name = var.project_name
+  environment = var.environment
+  aws_account_id = var.aws_account_id
+  github_repo = var.github_repo
+}
+
+module "waf" {
+  source = "./modules/waf"
+
+  project_name = var.project_name
+  environment = var.environment
+  aws_account_id = var.aws_account_id
+}
+
+module "api_gateway" {
+  source = "./modules/api_gateway"
+
+  project_name = var.project_name
+  environment = var.environment
+  user_pool_arn = module.cognito.user_pool_arn
+  alb_dns_name = module.alb.alb_dns_name
+  waf_arn = module.waf.waf_arn
+}

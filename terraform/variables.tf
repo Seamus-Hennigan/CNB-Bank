@@ -51,3 +51,18 @@ variable "stock_api_key" {
   type = string
   sensitive = true
 }
+
+variable "aws_account_id" {
+  description = "AWS account ID"
+  type = string
+}
+
+variable "github_repo" {
+  description = "GitHub repository in format owner/repo"
+  type = string
+}
+
+variable "alert_email" {
+  description = "Email address for CloudWatch alerts"
+  type = string
+}
