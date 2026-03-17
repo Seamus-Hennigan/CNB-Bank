@@ -97,3 +97,4 @@ variable "trading_max_count" {
   type        = number
   default     = 4
 }
+

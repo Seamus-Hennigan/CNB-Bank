@@ -1,4 +1,12 @@
 terraform {
+  cloud {
+    organization = "CNB-Bank"
+
+    workspaces {
+      name = "CNB-Bank"
+    }
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"

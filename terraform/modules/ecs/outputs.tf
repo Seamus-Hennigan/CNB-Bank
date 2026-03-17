@@ -25,3 +25,11 @@ output "trading_task_definition_arn" {
 output "ecs_task_execution_role_arn" {
   value = aws_iam_role.ecs_task_execution.arn
 }
+
+output "banking_ecr_repository_url" {
+  value = aws_ecr_repository.banking.repository_url
+}
+
+output "trading_ecr_repository_url" {
+  value = aws_ecr_repository.trading.repository_url
+}

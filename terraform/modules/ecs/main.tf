@@ -308,6 +308,35 @@ resource "aws_appautoscaling_policy" "trading_cpu" {
   }
 }
 
+# ECR Repository for Banking Service
+resource "aws_ecr_repository" "banking" {
+  name = "${var.project_name}-banking"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-banking-ecr"
+    Environment = var.environment
+  }
+}
+
+# ECR Repository for Trading Service
+resource "aws_ecr_repository" "trading" {
+  name = "${var.project_name}-trading"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-trading-ecr"
+    Environment = var.environment
+  }
+}
 
 
 

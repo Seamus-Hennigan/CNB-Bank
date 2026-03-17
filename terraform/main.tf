@@ -118,3 +118,7 @@ module "api_gateway" {
   alb_dns_name = module.alb.alb_dns_name
   waf_arn = module.waf.waf_arn
 }
+
+
+
+
