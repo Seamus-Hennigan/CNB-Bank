@@ -13,12 +13,12 @@ variable "user_pool_arn" {
   type = string
 }
 
-variable "alb_dns_name" {
-  description = "ALB DNS name to forward requests to"
+variable "waf_arn" {
+  description = "WAF web ACL ARN"
   type = string
 }
 
-variable "waf_arn" {
-  description = "WAF web ACL ARN"
+variable "cloudflare_tunnel_url" {
+  description = "Cloudflare Tunnel URL for backend services"
   type = string
 }

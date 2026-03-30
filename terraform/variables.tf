@@ -16,41 +16,7 @@ variable "environment" {
   default = "dev"
 }
 
-variable "banking_db_username" {
-  description = "Master userName for banking database"
-  type = string
-  sensitive = true
-}
 
-variable "banking_db_password" {
-  description = "Master password for banking database"
-  type = string
-  sensitive = true
-}
-
-variable "trading_db_username" {
-  description = "Master userName for trading database"
-  type = string
-  sensitive = true
-}
-
-variable "trading_db_password" {
-  description = "Master password for trading database"
-  type = string
-  sensitive = true
-}
-
-variable "certificate_arn" {
-  description = "ACM certificate ARN for HTTPS"
-  type = string
-  
-}
-
-variable "stock_api_key" {
-  description = "Stock market API key"
-  type = string
-  sensitive = true
-}
 
 variable "aws_account_id" {
   description = "AWS account ID"
@@ -62,11 +28,10 @@ variable "github_repo" {
   type = string
 }
 
-variable "alert_email" {
-  description = "Email address for CloudWatch alerts"
+variable "cloudflare_tunnel_url" {
+  description = "Cloudflare Tunnel URL for API Gateway backend"
   type = string
 }
-
 
 
 

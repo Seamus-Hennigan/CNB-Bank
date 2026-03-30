@@ -1,7 +1,7 @@
 #API Gateway REST API
 resource "aws_api_gateway_rest_api" "main" {
     name = "${var.project_name}-api"
-    description = "CNB Bnaking and Trading API Gateway"
+    description = "CNB Banking and Trading API Gateway"
 
     endpoint_configuration {
       types = ["REGIONAL"]
@@ -9,7 +9,7 @@ resource "aws_api_gateway_rest_api" "main" {
 
     tags = {
       Name = "${var.project_name}-api"
-      Environement = var.environment
+      Environment = var.environment
     }
 }
 
@@ -50,7 +50,7 @@ resource "aws_api_gateway_integration" "banking_proxy" {
     http_method = aws_api_gateway_method.banking_proxy.http_method
     type = "HTTP_PROXY"
     integration_http_method = "ANY"
-    uri = "http://${var.alb_dns_name}/api/banking/{proxy}"
+    uri = "https://${var.cloudflare_tunnel_url}/api/banking/{proxy}"
 }
 
 #Trading Resource
@@ -80,7 +80,7 @@ resource "aws_api_gateway_integration" "trading_proxy" {
   http_method = aws_api_gateway_method.trading_proxy.http_method
   type = "HTTP_PROXY"
   integration_http_method = "ANY"
-  uri = "http://${var.alb_dns_name}/api/trading/{proxy}"
+  uri = "https://${var.cloudflare_tunnel_url}/api/trading/{proxy}"
 }
 
 #Deployment
@@ -112,4 +112,4 @@ resource "aws_api_gateway_stage" "main" {
 resource "aws_wafv2_web_acl_association" "api_gateway" {
   resource_arn = aws_api_gateway_stage.main.arn
   web_acl_arn = var.waf_arn
-} 
+}
