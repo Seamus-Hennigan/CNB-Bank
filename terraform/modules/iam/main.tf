@@ -1,4 +1,4 @@
-# CloudTrail IAM Role
+# IAM role assumed by the CloudTrail service to write logs to CloudWatch Logs.
 resource "aws_iam_role" "cloudtrail" {
   name = "${var.project_name}-cloudtrail-role"
 
@@ -16,11 +16,12 @@ resource "aws_iam_role" "cloudtrail" {
   })
 
   tags = {
-    Name = "${var.project_name}-cloudtrail-role"
+    Name        = "${var.project_name}-cloudtrail-role"
     Environment = var.environment
   }
 }
 
+# Inline policy granting CloudTrail permission to write logs to CloudWatch Logs.
 resource "aws_iam_role_policy" "cloudtrail" {
   name = "${var.project_name}-cloudtrail-policy"
   role = aws_iam_role.cloudtrail.id
@@ -41,7 +42,7 @@ resource "aws_iam_role_policy" "cloudtrail" {
   })
 }
 
-# GuardDuty IAM Role
+# IAM role assumed by GuardDuty to read from S3 and publish threat findings.
 resource "aws_iam_role" "guardduty" {
   name = "${var.project_name}-guardduty-role"
 
@@ -59,42 +60,29 @@ resource "aws_iam_role" "guardduty" {
   })
 
   tags = {
-    Name = "${var.project_name}-guardduty-role"
+    Name        = "${var.project_name}-guardduty-role"
     Environment = var.environment
   }
 }
 
-# CI/CD IAM Role (for GitHub Actions)
-resource "aws_iam_role" "cicd" {
-  name = "${var.project_name}-cicd-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRoleWithWebIdentity"
-        Effect = "Allow"
-        Principal = {
-          Federated = "arn:aws:iam::${var.aws_account_id}:oidc-provider/token.actions.githubusercontent.com"
-        }
-        Condition = {
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
-          }
-        }
-      }
-    ]
-  })
+# Dedicated IAM user for the Jenkins CI/CD pipeline.
+# Jenkins uses programmatic credentials (access key below) to push images to ECR,
+# deploy frontend assets to S3, and invalidate the CloudFront distribution.
+resource "aws_iam_user" "jenkins" {
+  name = "${var.project_name}-jenkins"
 
   tags = {
-    Name = "${var.project_name}-cicd-role"
+    Name        = "${var.project_name}-jenkins"
     Environment = var.environment
   }
 }
 
-resource "aws_iam_role_policy" "cicd" {
-  name = "${var.project_name}-cicd-policy"
-  role = aws_iam_role.cicd.id
+# Inline policy granting Jenkins the minimum permissions required for CI/CD:
+# ECR image push, S3 frontend deployment, and CloudFront cache invalidation.
+# ECS actions have been removed — services now run on self-hosted k3s.
+resource "aws_iam_user_policy" "jenkins" {
+  name = "${var.project_name}-jenkins-policy"
+  user = aws_iam_user.jenkins.name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -102,9 +90,6 @@ resource "aws_iam_role_policy" "cicd" {
       {
         Effect = "Allow"
         Action = [
-          "ecs:UpdateService",
-          "ecs:DescribeServices",
-          "ecs:RegisterTaskDefinition",
           "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:PutImage",
@@ -123,7 +108,14 @@ resource "aws_iam_role_policy" "cicd" {
   })
 }
 
-# Monitoring IAM Role (for Prometheus)
+# Programmatic access key for the Jenkins IAM user.
+# Store the secret_key output in Jenkins Credentials Manager — never commit it.
+resource "aws_iam_access_key" "jenkins" {
+  user = aws_iam_user.jenkins.name
+}
+
+# IAM role for a Prometheus/monitoring agent running on EC2 (or compatible IRSA binding).
+# Grants read-only access to CloudWatch metrics and log groups.
 resource "aws_iam_role" "monitoring" {
   name = "${var.project_name}-monitoring-role"
 
@@ -141,11 +133,13 @@ resource "aws_iam_role" "monitoring" {
   })
 
   tags = {
-    Name = "${var.project_name}-monitoring-role"
+    Name        = "${var.project_name}-monitoring-role"
     Environment = var.environment
   }
 }
 
+# Inline policy granting read-only access to CloudWatch metrics and log groups.
+# ECS-specific actions have been removed — services now run on self-hosted k3s.
 resource "aws_iam_role_policy" "monitoring" {
   name = "${var.project_name}-monitoring-policy"
   role = aws_iam_role.monitoring.id
@@ -159,9 +153,6 @@ resource "aws_iam_role_policy" "monitoring" {
           "cloudwatch:GetMetricStatistics",
           "cloudwatch:ListMetrics",
           "cloudwatch:GetMetricData",
-          "ecs:ListClusters",
-          "ecs:ListServices",
-          "ecs:DescribeServices",
           "logs:DescribeLogGroups",
           "logs:GetLogEvents"
         ]
