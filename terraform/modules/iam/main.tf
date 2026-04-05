@@ -114,35 +114,22 @@ resource "aws_iam_access_key" "jenkins" {
   user = aws_iam_user.jenkins.name
 }
 
-# IAM role for a Prometheus/monitoring agent running on EC2 (or compatible IRSA binding).
-# Grants read-only access to CloudWatch metrics and log groups.
-resource "aws_iam_role" "monitoring" {
-  name = "${var.project_name}-monitoring-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
+# Dedicated IAM user for the Prometheus monitoring stack running on the Pi cluster.
+# Since Prometheus runs on self-hosted k3s (not EC2), it cannot use an instance role —
+# it uses programmatic credentials (access key below) to query AWS CloudWatch metrics.
+resource "aws_iam_user" "monitoring" {
+  name = "${var.project_name}-monitoring"
 
   tags = {
-    Name        = "${var.project_name}-monitoring-role"
+    Name        = "${var.project_name}-monitoring"
     Environment = var.environment
   }
 }
 
-# Inline policy granting read-only access to CloudWatch metrics and log groups.
-# ECS-specific actions have been removed — services now run on self-hosted k3s.
-resource "aws_iam_role_policy" "monitoring" {
+# Inline policy granting Prometheus read-only access to CloudWatch metrics and log groups.
+resource "aws_iam_user_policy" "monitoring" {
   name = "${var.project_name}-monitoring-policy"
-  role = aws_iam_role.monitoring.id
+  user = aws_iam_user.monitoring.name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -160,4 +147,10 @@ resource "aws_iam_role_policy" "monitoring" {
       }
     ]
   })
+}
+
+# Programmatic access key for the monitoring IAM user.
+# Store the secret_key in Prometheus / Grafana CloudWatch datasource config — never commit it.
+resource "aws_iam_access_key" "monitoring" {
+  user = aws_iam_user.monitoring.name
 }

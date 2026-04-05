@@ -49,6 +49,15 @@ output "jenkins_access_key_id" {
   value       = module.iam.jenkins_access_key_id
 }
 
+# ── Monitoring ────────────────────────────────────────────────────────────────
+
+# Prometheus/Grafana access key ID — configure in the Grafana CloudWatch datasource.
+# Retrieve monitoring_secret_access_key separately via: terraform output -raw monitoring_secret_access_key
+output "monitoring_access_key_id" {
+  description = "AWS access key ID for the Prometheus monitoring IAM user"
+  value       = module.iam.monitoring_access_key_id
+}
+
 # ── Kubernetes ────────────────────────────────────────────────────────────────
 
 # Kubernetes namespace all CNB workloads run in on the Pi cluster.

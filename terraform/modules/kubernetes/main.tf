@@ -72,7 +72,7 @@ resource "kubernetes_config_map" "banking" {
 
   data = {
     NODE_ENV = var.environment
-    PORT     = "3001"
+    PORT     = "8080"
     DB_HOST  = "${var.project_name}-banking-db"
     DB_PORT  = "5432"
     DB_NAME  = "banking"
@@ -90,7 +90,7 @@ resource "kubernetes_config_map" "trading" {
 
   data = {
     NODE_ENV = var.environment
-    PORT     = "3002"
+    PORT     = "8081"
     DB_HOST  = "${var.project_name}-trading-db"
     DB_PORT  = "5432"
     DB_NAME  = "trading"
@@ -323,7 +323,7 @@ resource "kubernetes_deployment" "banking" {
           image = local.banking_image
 
           port {
-            container_port = 3001
+            container_port = 8080
           }
 
           # Inject all keys from the ConfigMap as environment variables.
@@ -344,7 +344,7 @@ resource "kubernetes_deployment" "banking" {
           liveness_probe {
             http_get {
               path = "/health"
-              port = 3001
+              port = 8080
             }
             initial_delay_seconds = 15
             period_seconds        = 20
@@ -354,7 +354,7 @@ resource "kubernetes_deployment" "banking" {
           readiness_probe {
             http_get {
               path = "/health"
-              port = 3001
+              port = 8080
             }
             initial_delay_seconds = 5
             period_seconds        = 10
@@ -366,7 +366,7 @@ resource "kubernetes_deployment" "banking" {
 }
 
 # Deployment running the trading Express service.
-# Same pattern as banking — separate image, port 3002, and its own ConfigMap and Secret.
+# Same pattern as banking — separate image, port 8081, and its own ConfigMap and Secret.
 resource "kubernetes_deployment" "trading" {
   metadata {
     name      = "${var.project_name}-trading"
@@ -392,7 +392,7 @@ resource "kubernetes_deployment" "trading" {
           image = local.trading_image
 
           port {
-            container_port = 3002
+            container_port = 8081
           }
 
           # Inject all keys from the ConfigMap as environment variables.
@@ -413,7 +413,7 @@ resource "kubernetes_deployment" "trading" {
           liveness_probe {
             http_get {
               path = "/health"
-              port = 3002
+              port = 8081
             }
             initial_delay_seconds = 15
             period_seconds        = 20
@@ -423,7 +423,7 @@ resource "kubernetes_deployment" "trading" {
           readiness_probe {
             http_get {
               path = "/health"
-              port = 3002
+              port = 8081
             }
             initial_delay_seconds = 5
             period_seconds        = 10
@@ -436,9 +436,9 @@ resource "kubernetes_deployment" "trading" {
 
 # ── Application Services ──────────────────────────────────────────────────────
 
-# ClusterIP Service exposing the banking pods at port 3001 inside the cluster.
-# The Cloudflare Tunnel connector on the Pi targets this service to route
-# /api/banking traffic from API Gateway to the banking pods.
+# ClusterIP Service exposing the banking pods at port 8080 inside the cluster.
+# Traefik (ingress on the Pi) routes /api/banking traffic to this service,
+# which it receives from the Cloudflare Tunnel.
 resource "kubernetes_service" "banking" {
   metadata {
     name      = "${var.project_name}-banking"
@@ -451,15 +451,15 @@ resource "kubernetes_service" "banking" {
     type     = "ClusterIP"
 
     port {
-      port        = 3001
-      target_port = 3001
+      port        = 8080
+      target_port = 8080
       protocol    = "TCP"
     }
   }
 }
 
-# ClusterIP Service exposing the trading pods at port 3002 inside the cluster.
-# The Cloudflare Tunnel connector routes /api/trading traffic to this service.
+# ClusterIP Service exposing the trading pods at port 8081 inside the cluster.
+# Traefik routes /api/trading traffic to this service.
 resource "kubernetes_service" "trading" {
   metadata {
     name      = "${var.project_name}-trading"
@@ -472,8 +472,8 @@ resource "kubernetes_service" "trading" {
     type     = "ClusterIP"
 
     port {
-      port        = 3002
-      target_port = 3002
+      port        = 8081
+      target_port = 8081
       protocol    = "TCP"
     }
   }
