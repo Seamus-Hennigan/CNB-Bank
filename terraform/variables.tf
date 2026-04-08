@@ -23,8 +23,62 @@ variable "aws_account_id" {
   type        = string
 }
 
-variable "cloudflare_tunnel_url" {
-  description = "Cloudflare Tunnel URL for API Gateway backend — points to services on the Pi"
+# ── Cloudflare ────────────────────────────────────────────────────────────────
+
+# Cloudflare API token — used by the Cloudflare provider to manage DNS and tunnels.
+# Create at dash.cloudflare.com → My Profile → API Tokens.
+# Required permissions: Zone:DNS:Edit, Account:Cloudflare Tunnel:Edit.
+# Set as a sensitive workspace variable in Terraform Cloud — never commit it.
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token for managing DNS records and tunnels"
+  type        = string
+  sensitive   = true
+}
+
+# Cloudflare Account ID — visible in the Cloudflare dashboard URL and right sidebar.
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID"
+  type        = string
+  default     = "df3a1bebb154776d069146481498a39e"
+}
+
+# The root domain registered in Cloudflare — used for DNS records and zone lookup.
+variable "domain" {
+  description = "Root domain managed in Cloudflare (e.g. cnb-bank.org)"
+  type        = string
+  default     = "cnb-bank.org"
+}
+
+# Base64-encoded 32-byte random secret used to authenticate the cloudflared daemon.
+# Generate with: openssl rand -base64 32
+# Set as a sensitive workspace variable in Terraform Cloud — never commit it.
+variable "tunnel_secret" {
+  description = "Base64-encoded 32-byte secret for Cloudflare Tunnel authentication"
+  type        = string
+  sensitive   = true
+}
+
+# URL cloudflared uses to forward traffic to Traefik on the Pi.
+# If cloudflared runs as a pod inside the k3s cluster, use the Traefik ClusterIP DNS name.
+# If cloudflared runs outside the cluster, use the Pi node IP + Traefik NodePort.
+variable "traefik_service_url" {
+  description = "Internal URL cloudflared uses to reach Traefik on the Pi"
+  type        = string
+  default     = "http://traefik.kube-system.svc.cluster.local:80"
+}
+
+# Custom domain for the API Gateway — exposed as api.cnb-bank.org via a Cloudflare DNS CNAME.
+variable "custom_domain_name" {
+  description = "Custom domain name for the API Gateway (e.g. api.cnb-bank.org)"
+  type        = string
+  default     = "api.cnb-bank.org"
+}
+
+# ARN of the ACM certificate holding the Cloudflare Origin CA certificate.
+# This certificate authenticates the TLS connection from Cloudflare's edge to API Gateway.
+# Import the Origin CA cert into ACM first, then provide the resulting ARN here.
+variable "cloudflare_acm_certificate_arn" {
+  description = "ACM certificate ARN for the imported Cloudflare Origin CA certificate"
   type        = string
 }
 

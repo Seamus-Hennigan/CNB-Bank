@@ -21,6 +21,12 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.0"
     }
+
+    # Cloudflare provider — manages the tunnel, DNS records, and zone for cnb-bank.org.
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 
   required_version = ">= 1.0"
@@ -36,4 +42,10 @@ provider "aws" {
 provider "kubernetes" {
   config_path    = var.kubernetes_config_path
   config_context = var.kubernetes_context
+}
+
+# Cloudflare provider — authenticates using an API token stored as a sensitive
+# workspace variable in Terraform Cloud. Never commit the token to source control.
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
 }

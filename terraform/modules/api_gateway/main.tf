@@ -127,3 +127,28 @@ resource "aws_wafv2_web_acl_association" "api_gateway" {
   resource_arn = aws_api_gateway_stage.main.arn
   web_acl_arn  = var.waf_arn
 }
+
+# Custom domain name resource that maps api.cnb-bank.org to this API Gateway.
+# Uses the Cloudflare Origin CA certificate imported into ACM to authenticate
+# the TLS connection from Cloudflare's edge to the regional API Gateway endpoint.
+resource "aws_api_gateway_domain_name" "main" {
+  domain_name              = var.custom_domain_name
+  regional_certificate_arn = var.cloudflare_acm_certificate_arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  tags = {
+    Name        = "${var.project_name}-api-domain"
+    Environment = var.environment
+  }
+}
+
+# Maps the deployed API Gateway stage to the custom domain.
+# After applying, requests to api.cnb-bank.org are routed to the stage's invoke URL.
+resource "aws_api_gateway_base_path_mapping" "main" {
+  api_id      = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.main.stage_name
+  domain_name = aws_api_gateway_domain_name.main.domain_name
+}

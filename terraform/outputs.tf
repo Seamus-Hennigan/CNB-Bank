@@ -58,6 +58,23 @@ output "monitoring_access_key_id" {
   value       = module.iam.monitoring_access_key_id
 }
 
+# ── Cloudflare ────────────────────────────────────────────────────────────────
+
+# The URL users (and API Gateway) use to reach services on the Pi through the tunnel.
+output "frontend_url" {
+  description = "Public URL of the React frontend"
+  value       = "https://app.${var.domain}"
+}
+
+# cloudflared run token — run this on the Pi to connect the tunnel to Cloudflare's edge:
+#   cloudflared tunnel run --token <token>
+# Retrieve with: terraform output -raw cloudflare_tunnel_token
+output "cloudflare_tunnel_token" {
+  description = "cloudflared authentication token — configure on the Pi to connect the tunnel (sensitive)"
+  value       = module.cloudflare.tunnel_token
+  sensitive   = true
+}
+
 # ── Kubernetes ────────────────────────────────────────────────────────────────
 
 # Kubernetes namespace all CNB workloads run in on the Pi cluster.
