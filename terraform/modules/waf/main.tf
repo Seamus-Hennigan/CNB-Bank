@@ -155,6 +155,10 @@ resource "aws_cloudtrail" "main" {
   is_multi_region_trail         = true
   enable_log_file_validation    = true
 
+  # The bucket policy must exist before CloudTrail attempts to write to it.
+  # Without this, AWS returns InsufficientS3BucketPolicyException.
+  depends_on = [aws_s3_bucket_policy.cloudtrail]
+
   tags = {
     Name        = "${var.project_name}-cloudtrail"
     Environment = var.environment

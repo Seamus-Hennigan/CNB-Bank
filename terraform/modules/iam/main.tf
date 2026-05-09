@@ -140,6 +140,8 @@ resource "aws_iam_user_policy" "monitoring" {
           "cloudwatch:GetMetricStatistics",
           "cloudwatch:ListMetrics",
           "cloudwatch:GetMetricData",
+          "cloudwatch:DescribeAlarms",
+          "tag:GetResources",
           "logs:DescribeLogGroups",
           "logs:GetLogEvents"
         ]

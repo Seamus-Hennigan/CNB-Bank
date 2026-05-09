@@ -6,6 +6,11 @@ locals {
   banking_image = "${local.ecr_base}/${var.project_name}-banking:${var.banking_image_tag}"
   trading_image = "${local.ecr_base}/${var.project_name}-trading:${var.trading_image_tag}"
 
+  # Secret names — created manually via kubectl, not managed by Terraform.
+  # kubectl create secret generic <name> -n <namespace> --from-literal=POSTGRES_PASSWORD=<pw> --from-literal=POSTGRES_USER=<user> --from-literal=POSTGRES_DB=<db>
+  banking_db_secret_name = "${var.project_name}-banking-db-secret"
+  trading_db_secret_name = "${var.project_name}-trading-db-secret"
+
   # Common labels applied to every resource for selection, observability, and GitOps tooling.
   common_labels = {
     "app.kubernetes.io/managed-by" = "terraform"
@@ -22,40 +27,6 @@ resource "kubernetes_namespace" "cnb" {
   metadata {
     name   = var.project_name
     labels = local.common_labels
-  }
-}
-
-# ── Secrets ───────────────────────────────────────────────────────────────────
-
-# Kubernetes Secret storing the banking PostgreSQL credentials.
-# The provider base64-encodes the values automatically; they are injected as
-# environment variables into both the banking service and the database pods.
-resource "kubernetes_secret" "banking_db" {
-  metadata {
-    name      = "${var.project_name}-banking-db-secret"
-    namespace = kubernetes_namespace.cnb.metadata[0].name
-    labels    = local.common_labels
-  }
-
-  data = {
-    POSTGRES_PASSWORD = var.banking_db_password
-    POSTGRES_USER     = "banking"
-    POSTGRES_DB       = "banking"
-  }
-}
-
-# Kubernetes Secret storing the trading PostgreSQL credentials.
-resource "kubernetes_secret" "trading_db" {
-  metadata {
-    name      = "${var.project_name}-trading-db-secret"
-    namespace = kubernetes_namespace.cnb.metadata[0].name
-    labels    = local.common_labels
-  }
-
-  data = {
-    POSTGRES_PASSWORD = var.trading_db_password
-    POSTGRES_USER     = "trading"
-    POSTGRES_DB       = "trading"
   }
 }
 
@@ -168,9 +139,10 @@ resource "kubernetes_stateful_set" "banking_db" {
           }
 
           # Inject POSTGRES_PASSWORD, POSTGRES_USER, and POSTGRES_DB from the Secret.
+          # Secret must be created manually: kubectl create secret generic <name> -n <ns> ...
           env_from {
             secret_ref {
-              name = kubernetes_secret.banking_db.metadata[0].name
+              name = local.banking_db_secret_name
             }
           }
 
@@ -224,9 +196,10 @@ resource "kubernetes_stateful_set" "trading_db" {
           }
 
           # Inject POSTGRES_PASSWORD, POSTGRES_USER, and POSTGRES_DB from the Secret.
+          # Secret must be created manually: kubectl create secret generic <name> -n <ns> ...
           env_from {
             secret_ref {
-              name = kubernetes_secret.trading_db.metadata[0].name
+              name = local.trading_db_secret_name
             }
           }
 
@@ -336,7 +309,7 @@ resource "kubernetes_deployment" "banking" {
           # Inject the DB password from the Secret as environment variables.
           env_from {
             secret_ref {
-              name = kubernetes_secret.banking_db.metadata[0].name
+              name = local.banking_db_secret_name
             }
           }
 
@@ -405,7 +378,7 @@ resource "kubernetes_deployment" "trading" {
           # Inject the DB password from the Secret as environment variables.
           env_from {
             secret_ref {
-              name = kubernetes_secret.trading_db.metadata[0].name
+              name = local.trading_db_secret_name
             }
           }
 

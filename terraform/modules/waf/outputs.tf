@@ -17,3 +17,8 @@ output "cloudtrail_arn" {
   description = "ARN of the CloudTrail trail"
   value       = aws_cloudtrail.main.arn
 }
+
+output "waf_name" {
+  description = "Name of the WAF Web ACL — used to scope CloudWatch alarms to this ACL"
+  value       = aws_wafv2_web_acl.main.name
+}

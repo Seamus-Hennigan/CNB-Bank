@@ -22,15 +22,6 @@ variable "domain" {
   type        = string
 }
 
-# Base64-encoded 32-byte random secret used to authenticate the tunnel.
-# Generate with: openssl rand -base64 32
-# Store as a sensitive workspace variable in Terraform Cloud — never commit it.
-variable "tunnel_secret" {
-  description = "Base64-encoded 32-byte secret for Cloudflare Tunnel authentication"
-  type        = string
-  sensitive   = true
-}
-
 # The URL cloudflared uses to forward traffic to Traefik on the Pi cluster.
 # If cloudflared runs as a pod inside the cluster, use the Traefik ClusterIP DNS name.
 # If cloudflared runs outside the cluster, use the node IP + Traefik's NodePort.

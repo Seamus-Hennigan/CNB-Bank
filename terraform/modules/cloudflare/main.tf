@@ -6,6 +6,10 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 4.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -16,13 +20,20 @@ data "cloudflare_zone" "main" {
   name = var.domain
 }
 
+# Auto-generated 32-byte base64 secret used to authenticate the cloudflared daemon.
+# Terraform manages this value — you never need to set or know it manually.
+resource "random_password" "tunnel_secret" {
+  length  = 32
+  special = false
+}
+
 # Create the Named Tunnel in the Cloudflare account.
 # A Named Tunnel creates a secure outbound-only connection from the Pi to Cloudflare's
 # edge — no inbound firewall ports need to be opened.
 resource "cloudflare_zero_trust_tunnel_cloudflared" "main" {
   account_id = var.cloudflare_account_id
   name       = "${var.project_name}-${var.environment}-tunnel"
-  secret     = var.tunnel_secret
+  secret     = base64encode(random_password.tunnel_secret.result)
 }
 
 # Configure the tunnel's ingress rules.
