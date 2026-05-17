@@ -49,17 +49,3 @@ variable "trading_replicas" {
   type        = number
   default     = 1
 }
-
-# PostgreSQL password for the banking database — stored as a Kubernetes Secret.
-variable "banking_db_password" {
-  description = "Password for the banking PostgreSQL StatefulSet"
-  type        = string
-  sensitive   = true
-}
-
-# PostgreSQL password for the trading database — stored as a Kubernetes Secret.
-variable "trading_db_password" {
-  description = "Password for the trading PostgreSQL StatefulSet"
-  type        = string
-  sensitive   = true
-}

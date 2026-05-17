@@ -58,6 +58,14 @@ output "monitoring_access_key_id" {
   value       = module.iam.monitoring_access_key_id
 }
 
+# Retrieve with: terraform output -raw monitoring_secret_access_key
+# Use the value to configure the Grafana CloudWatch datasource.
+output "monitoring_secret_access_key" {
+  description = "AWS secret access key for the monitoring IAM user — configure in Grafana CloudWatch datasource"
+  value       = module.iam.monitoring_secret_access_key
+  sensitive   = true
+}
+
 # ── Cloudflare ────────────────────────────────────────────────────────────────
 
 # The URL users (and API Gateway) use to reach services on the Pi through the tunnel.

@@ -49,15 +49,6 @@ variable "domain" {
   default     = "cnb-bank.org"
 }
 
-# Base64-encoded 32-byte random secret used to authenticate the cloudflared daemon.
-# Generate with: openssl rand -base64 32
-# Set as a sensitive workspace variable in Terraform Cloud — never commit it.
-variable "tunnel_secret" {
-  description = "Base64-encoded 32-byte secret for Cloudflare Tunnel authentication"
-  type        = string
-  sensitive   = true
-}
-
 # URL cloudflared uses to forward traffic to Traefik on the Pi.
 # If cloudflared runs as a pod inside the k3s cluster, use the Traefik ClusterIP DNS name.
 # If cloudflared runs outside the cluster, use the Pi node IP + Traefik NodePort.
@@ -124,19 +115,4 @@ variable "trading_replicas" {
   description = "Number of pod replicas for the trading Kubernetes Deployment"
   type        = number
   default     = 1
-}
-
-# PostgreSQL password for the banking database — stored as a Kubernetes Secret.
-# Set this as a sensitive workspace variable in Terraform Cloud; never commit it.
-variable "banking_db_password" {
-  description = "Password for the banking PostgreSQL database running on Kubernetes"
-  type        = string
-  sensitive   = true
-}
-
-# PostgreSQL password for the trading database — stored as a Kubernetes Secret.
-variable "trading_db_password" {
-  description = "Password for the trading PostgreSQL database running on Kubernetes"
-  type        = string
-  sensitive   = true
 }

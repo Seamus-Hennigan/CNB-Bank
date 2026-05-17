@@ -2,6 +2,11 @@ output "api_gateway_id" {
   value = aws_api_gateway_rest_api.main.id
 }
 
+output "api_gateway_name" {
+  description = "Name of the REST API — used to scope CloudWatch alarms to this API"
+  value       = aws_api_gateway_rest_api.main.name
+}
+
 output "api_gateway_url" {
   value = aws_api_gateway_stage.main.invoke_url
 }

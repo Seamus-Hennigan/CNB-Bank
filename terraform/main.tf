@@ -59,6 +59,18 @@ module "api_gateway" {
   cloudflare_acm_certificate_arn = var.cloudflare_acm_certificate_arn
 }
 
+# CloudWatch metric alarms for API Gateway, WAF, S3, and billing.
+# Grafana queries these alarm states via the CloudWatch datasource using the monitoring IAM user.
+module "cloudwatch" {
+  source = "./modules/cloudwatch"
+
+  project_name     = var.project_name
+  environment      = var.environment
+  api_gateway_name = module.api_gateway.api_gateway_name
+  waf_acl_name     = module.waf.waf_name
+  s3_bucket_name   = module.s3.frontend_bucket_name
+}
+
 # Cloudflare Tunnel, DNS records, and zone configuration for cnb-bank.org.
 # Creates the Named Tunnel, configures ingress routing to Traefik on the Pi,
 # and sets up DNS CNAMEs for the frontend (app.cnb-bank.org), tunnel (services.cnb-bank.org),
@@ -70,7 +82,6 @@ module "cloudflare" {
   environment                 = var.environment
   cloudflare_account_id       = var.cloudflare_account_id
   domain                      = var.domain
-  tunnel_secret               = var.tunnel_secret
   traefik_service_url         = var.traefik_service_url
   cloudfront_domain           = module.s3.cloudfront_domain_name
   api_gateway_regional_domain = module.api_gateway.regional_domain_name
@@ -79,6 +90,7 @@ module "cloudflare" {
 # Kubernetes workloads running on the self-hosted Raspberry Pi k3s cluster.
 # Includes banking and trading Deployments, their PostgreSQL StatefulSets,
 # PersistentVolumeClaims, ConfigMaps, Secrets, and ClusterIP Services.
+
 module "kubernetes" {
   source = "./modules/kubernetes"
 
@@ -88,8 +100,6 @@ module "kubernetes" {
   aws_region          = var.aws_region
   banking_image_tag   = var.banking_image_tag
   trading_image_tag   = var.trading_image_tag
-  banking_replicas    = var.banking_replicas
-  trading_replicas    = var.trading_replicas
-  banking_db_password = var.banking_db_password
-  trading_db_password = var.trading_db_password
+  banking_replicas = var.banking_replicas
+  trading_replicas = var.trading_replicas
 }
