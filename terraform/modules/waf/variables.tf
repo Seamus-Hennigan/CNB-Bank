@@ -15,3 +15,10 @@ variable "aws_account_id" {
   description = "AWS account ID"
   type        = string
 }
+
+# ARN of the IAM role CloudTrail assumes to deliver events to CloudWatch Logs.
+# Created in the iam module and passed in from the root module.
+variable "cloudtrail_cw_logs_role_arn" {
+  description = "IAM role ARN CloudTrail uses to write to its CloudWatch log group"
+  type        = string
+}

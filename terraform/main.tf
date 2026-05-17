@@ -10,8 +10,14 @@ locals {
 module "s3" {
   source = "./modules/s3"
 
-  project_name = var.project_name
-  environment  = var.environment
+  providers = {
+    aws         = aws
+    aws.replica = aws.replica
+  }
+
+  project_name   = var.project_name
+  environment    = var.environment
+  aws_account_id = var.aws_account_id
 }
 
 # Cognito User Pool, app client, hosted-UI domain, and user groups for authentication.
@@ -32,15 +38,22 @@ module "iam" {
   project_name   = var.project_name
   environment    = var.environment
   aws_account_id = var.aws_account_id
+  aws_region     = var.aws_region
 }
 
 # WAF Web ACL, GuardDuty detector, CloudTrail trail, and CloudTrail S3 log bucket.
 module "waf" {
   source = "./modules/waf"
 
-  project_name   = var.project_name
-  environment    = var.environment
-  aws_account_id = var.aws_account_id
+  providers = {
+    aws         = aws
+    aws.replica = aws.replica
+  }
+
+  project_name                = var.project_name
+  environment                 = var.environment
+  aws_account_id              = var.aws_account_id
+  cloudtrail_cw_logs_role_arn = module.iam.cloudtrail_role_arn
 }
 
 # API Gateway REST API with Cognito authorizer and proxy routes for banking and trading.
@@ -94,12 +107,12 @@ module "cloudflare" {
 module "kubernetes" {
   source = "./modules/kubernetes"
 
-  project_name        = var.project_name
-  environment         = var.environment
-  aws_account_id      = var.aws_account_id
-  aws_region          = var.aws_region
-  banking_image_tag   = var.banking_image_tag
-  trading_image_tag   = var.trading_image_tag
-  banking_replicas = var.banking_replicas
-  trading_replicas = var.trading_replicas
+  project_name      = var.project_name
+  environment       = var.environment
+  aws_account_id    = var.aws_account_id
+  aws_region        = var.aws_region
+  banking_image_tag = var.banking_image_tag
+  trading_image_tag = var.trading_image_tag
+  banking_replicas  = var.banking_replicas
+  trading_replicas  = var.trading_replicas
 }

@@ -21,7 +21,8 @@ resource "aws_iam_role" "cloudtrail" {
   }
 }
 
-# Inline policy granting CloudTrail permission to write logs to CloudWatch Logs.
+# Inline policy granting CloudTrail permission to write logs to the dedicated
+# CloudTrail CloudWatch log group only — scoped to that group's ARN rather than "*".
 resource "aws_iam_role_policy" "cloudtrail" {
   name = "${var.project_name}-cloudtrail-policy"
   role = aws_iam_role.cloudtrail.id
@@ -36,7 +37,7 @@ resource "aws_iam_role_policy" "cloudtrail" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "*"
+        Resource = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/cloudtrail/${var.project_name}*:*"
       }
     ]
   })
@@ -69,6 +70,7 @@ resource "aws_iam_role" "guardduty" {
 # Jenkins uses programmatic credentials (access key below) to push images to ECR,
 # deploy frontend assets to S3, and invalidate the CloudFront distribution.
 resource "aws_iam_user" "jenkins" {
+  # checkov:skip=CKV_AWS_273:Jenkins is a machine/CI principal; no SSO/IdP exists in this environment, so a scoped long-lived IAM user is the only viable auth mechanism for the self-hosted Jenkins controller.
   name = "${var.project_name}-jenkins"
 
   tags = {
@@ -79,8 +81,10 @@ resource "aws_iam_user" "jenkins" {
 
 # Inline policy granting Jenkins the minimum permissions required for CI/CD:
 # ECR image push, S3 frontend deployment, and CloudFront cache invalidation.
-# ECS actions have been removed — services now run on self-hosted k3s.
+# Every statement is scoped to specific resource ARNs (no "*" resources except for
+# ecr:GetAuthorizationToken, which AWS does not support resource-level scoping for).
 resource "aws_iam_user_policy" "jenkins" {
+  # checkov:skip=CKV_AWS_40:Jenkins is a single-purpose machine identity needing dedicated credentials; a group adds management indirection without changing the (already least-privilege) effective permissions.
   name = "${var.project_name}-jenkins-policy"
   user = aws_iam_user.jenkins.name
 
@@ -88,21 +92,47 @@ resource "aws_iam_user_policy" "jenkins" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid      = "EcrAuth"
+        Effect   = "Allow"
+        Action   = "ecr:GetAuthorizationToken"
+        Resource = "*"
+      },
+      {
+        Sid    = "EcrPush"
         Effect = "Allow"
         Action = [
-          "ecr:GetAuthorizationToken",
           "ecr:BatchCheckLayerAvailability",
           "ecr:PutImage",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
+          "ecr:CompleteLayerUpload"
+        ]
+        Resource = [
+          "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/${var.project_name}-banking",
+          "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/${var.project_name}-trading"
+        ]
+      },
+      {
+        Sid    = "S3FrontendObjects"
+        Effect = "Allow"
+        Action = [
           "s3:PutObject",
           "s3:GetObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "cloudfront:CreateInvalidation"
+          "s3:DeleteObject"
         ]
-        Resource = "*"
+        Resource = "arn:aws:s3:::${var.project_name}-frontend-${var.environment}/*"
+      },
+      {
+        Sid      = "S3FrontendList"
+        Effect   = "Allow"
+        Action   = "s3:ListBucket"
+        Resource = "arn:aws:s3:::${var.project_name}-frontend-${var.environment}"
+      },
+      {
+        Sid      = "CloudFrontInvalidation"
+        Effect   = "Allow"
+        Action   = "cloudfront:CreateInvalidation"
+        Resource = "arn:aws:cloudfront::${var.aws_account_id}:distribution/*"
       }
     ]
   })
@@ -118,6 +148,7 @@ resource "aws_iam_access_key" "jenkins" {
 # Since Prometheus runs on self-hosted k3s (not EC2), it cannot use an instance role —
 # it uses programmatic credentials (access key below) to query AWS CloudWatch metrics.
 resource "aws_iam_user" "monitoring" {
+  # checkov:skip=CKV_AWS_273:Prometheus runs on the self-hosted Pi cluster (not EC2, no instance role) and no SSO/IdP exists; a scoped read-only IAM user is the only viable mechanism.
   name = "${var.project_name}-monitoring"
 
   tags = {
@@ -126,8 +157,11 @@ resource "aws_iam_user" "monitoring" {
   }
 }
 
-# Inline policy granting Prometheus read-only access to CloudWatch metrics and log groups.
+# Inline policy granting Prometheus read-only access to CloudWatch metrics and log
+# groups. Account-wide list/describe actions that AWS does not support resource-level
+# scoping for use "*"; the remaining actions are scoped to this account/region.
 resource "aws_iam_user_policy" "monitoring" {
+  # checkov:skip=CKV_AWS_40:The monitoring user is a single-purpose machine identity needing dedicated read-only credentials; a group adds indirection without changing effective permissions.
   name = "${var.project_name}-monitoring-policy"
   user = aws_iam_user.monitoring.name
 
@@ -135,17 +169,28 @@ resource "aws_iam_user_policy" "monitoring" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "CloudWatchRead"
         Effect = "Allow"
         Action = [
           "cloudwatch:GetMetricStatistics",
           "cloudwatch:ListMetrics",
           "cloudwatch:GetMetricData",
-          "cloudwatch:DescribeAlarms",
           "tag:GetResources",
-          "logs:DescribeLogGroups",
-          "logs:GetLogEvents"
+          "logs:DescribeLogGroups"
         ]
         Resource = "*"
+      },
+      {
+        Sid      = "CloudWatchAlarms"
+        Effect   = "Allow"
+        Action   = "cloudwatch:DescribeAlarms"
+        Resource = "arn:aws:cloudwatch:${var.aws_region}:${var.aws_account_id}:alarm:*"
+      },
+      {
+        Sid      = "CloudWatchLogEvents"
+        Effect   = "Allow"
+        Action   = "logs:GetLogEvents"
+        Resource = "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:*:log-stream:*"
       }
     ]
   })

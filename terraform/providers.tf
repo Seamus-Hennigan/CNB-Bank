@@ -37,6 +37,13 @@ provider "aws" {
   region = var.aws_region
 }
 
+# Secondary AWS provider in a different region — used exclusively as the destination
+# for S3 cross-region replication (the frontend and CloudTrail log buckets replicate here).
+provider "aws" {
+  alias  = "replica"
+  region = var.replica_region
+}
+
 # Kubernetes provider — connects to the k3s cluster on the Raspberry Pi using a local
 # kubeconfig file. The Terraform Cloud agent resolves the path and context locally.
 provider "kubernetes" {

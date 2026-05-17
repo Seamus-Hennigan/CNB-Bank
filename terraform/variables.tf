@@ -23,6 +23,13 @@ variable "aws_account_id" {
   type        = string
 }
 
+# Destination region for S3 cross-region replication. Must differ from var.aws_region.
+variable "replica_region" {
+  description = "AWS region for S3 cross-region replication destination buckets"
+  type        = string
+  default     = "us-west-2"
+}
+
 # ── Cloudflare ────────────────────────────────────────────────────────────────
 
 # Cloudflare API token — used by the Cloudflare provider to manage DNS and tunnels.

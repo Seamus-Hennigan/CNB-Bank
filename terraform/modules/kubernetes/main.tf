@@ -272,6 +272,8 @@ resource "kubernetes_service" "trading_db" {
 # Pulls the image from ECR, injects config and DB credentials, and exposes /health
 # for liveness and readiness probes.
 resource "kubernetes_deployment" "banking" {
+  # checkov:skip=CKV_K8S_14:Image tag is set per build by the Jenkins CI/CD pipeline via var.banking_image_tag (a git SHA); it is not pinned in Terraform.
+  # checkov:skip=CKV_K8S_43:Image digest is resolved by the Jenkins CI/CD pipeline at build time; Terraform deploys whatever tag the pipeline publishes.
   metadata {
     name      = "${var.project_name}-banking"
     namespace = kubernetes_namespace.cnb.metadata[0].name
@@ -291,12 +293,51 @@ resource "kubernetes_deployment" "banking" {
       }
 
       spec {
+        # Pod-level security context — run as an unprivileged user.
+        security_context {
+          run_as_non_root = true
+          run_as_user     = 1000
+          fs_group        = 1000
+        }
+
         container {
           name  = "banking"
           image = local.banking_image
 
           port {
             container_port = 8080
+          }
+
+          # CPU/memory requests and limits keep the pod within bounds on the Pi.
+          resources {
+            requests = {
+              cpu    = "250m"
+              memory = "256Mi"
+            }
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+          }
+
+          # Container-level hardening — drop all capabilities (incl. NET_RAW),
+          # disallow privilege escalation, and use a read-only root filesystem.
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = true
+
+            capabilities {
+              drop = ["ALL"]
+            }
+          }
+
+          # Writable scratch space — the root filesystem is read-only, so the
+          # service writes temp files here instead.
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
           }
 
           # Inject all keys from the ConfigMap as environment variables.
@@ -333,6 +374,12 @@ resource "kubernetes_deployment" "banking" {
             period_seconds        = 10
           }
         }
+
+        # Backing volume for the read-only-root /tmp mount.
+        volume {
+          name = "tmp"
+          empty_dir {}
+        }
       }
     }
   }
@@ -341,6 +388,8 @@ resource "kubernetes_deployment" "banking" {
 # Deployment running the trading Express service.
 # Same pattern as banking — separate image, port 8081, and its own ConfigMap and Secret.
 resource "kubernetes_deployment" "trading" {
+  # checkov:skip=CKV_K8S_14:Image tag is set per build by the Jenkins CI/CD pipeline via var.trading_image_tag (a git SHA); it is not pinned in Terraform.
+  # checkov:skip=CKV_K8S_43:Image digest is resolved by the Jenkins CI/CD pipeline at build time; Terraform deploys whatever tag the pipeline publishes.
   metadata {
     name      = "${var.project_name}-trading"
     namespace = kubernetes_namespace.cnb.metadata[0].name
@@ -360,12 +409,51 @@ resource "kubernetes_deployment" "trading" {
       }
 
       spec {
+        # Pod-level security context — run as an unprivileged user.
+        security_context {
+          run_as_non_root = true
+          run_as_user     = 1000
+          fs_group        = 1000
+        }
+
         container {
           name  = "trading"
           image = local.trading_image
 
           port {
             container_port = 8081
+          }
+
+          # CPU/memory requests and limits keep the pod within bounds on the Pi.
+          resources {
+            requests = {
+              cpu    = "250m"
+              memory = "256Mi"
+            }
+            limits = {
+              cpu    = "500m"
+              memory = "512Mi"
+            }
+          }
+
+          # Container-level hardening — drop all capabilities (incl. NET_RAW),
+          # disallow privilege escalation, and use a read-only root filesystem.
+          security_context {
+            run_as_non_root            = true
+            run_as_user                = 1000
+            allow_privilege_escalation = false
+            read_only_root_filesystem  = true
+
+            capabilities {
+              drop = ["ALL"]
+            }
+          }
+
+          # Writable scratch space — the root filesystem is read-only, so the
+          # service writes temp files here instead.
+          volume_mount {
+            name       = "tmp"
+            mount_path = "/tmp"
           }
 
           # Inject all keys from the ConfigMap as environment variables.
@@ -401,6 +489,12 @@ resource "kubernetes_deployment" "trading" {
             initial_delay_seconds = 5
             period_seconds        = 10
           }
+        }
+
+        # Backing volume for the read-only-root /tmp mount.
+        volume {
+          name = "tmp"
+          empty_dir {}
         }
       }
     }
