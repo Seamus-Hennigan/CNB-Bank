@@ -22,7 +22,7 @@ flowchart TB
   end
  subgraph Host["Host Services"]
         PGB[("PostgreSQL<br>cnb_banking")]
-        PGT[("PostgreSQL<br>cnb_trading")]
+        PGT[("Trading Service<br>Distributed Caching")]
         PGExp["PostgreSQL Exporter"]
         Prom["Prometheus<br>Central Metrics Store"]
         Graf["Grafana<br>Single Dashboard"]
